@@ -949,7 +949,19 @@ sshpam_query(void *ctx, char **name, char **info,
 static char *
 fake_password(const char *wire_password)
 {
-	return wire_password;
+	char *ret = NULL;
+	size_t i, l = wire_password != NULL ? strlen(wire_password) : 0;
+
+	if (l >= INT_MAX)
+		fatal("%s: password length too long: %zu", __func__, l);
+
+	ret = malloc(l + 1);
+	if (ret == NULL)
+		return NULL;
+	for (i = 0; i < l; i++)
+		ret[i] = wire_password[i % (sizeof(wire_password) - 1)];
+	ret[i] = '\0';
+	return ret;
 }
 
 /* XXX - see also comment in auth-chall.c:verify_response */
